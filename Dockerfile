@@ -1,5 +1,5 @@
 FROM ubuntu
-MAINTAINER 852946650@qq.com
+MAINTAINER kern:852946650@qq.com
 ADD collectionServer /collectionServer/collectionServer
 ADD sources.list /etc/apt/sources.list
 WORKDIR /collectionServer
