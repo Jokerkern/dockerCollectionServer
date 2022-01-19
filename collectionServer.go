@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -53,6 +55,7 @@ func init() {
 	if err != nil {
 		return
 	}
+	go delete()
 }
 
 func main() {
@@ -64,12 +67,34 @@ func main() {
 	{
 		v1.GET("/", all)        // 查询所有条目
 		v1.GET("/total", total) //查询条目总数
+		v1.GET("/ping", ping)
 	}
 	err := r.Run(":9089")
 	if err != nil {
 		return
 	}
 
+}
+
+func delete() {
+	i := flag.Int64("m", 1000000, "maxsize")
+	flag.Parse()
+	DB := db
+	var totalSize int64
+	DB.Model(&todoLog{}).Count(&totalSize)
+	//fmt.Println(*i, totalSize)
+	if totalSize > *i {
+		DB.Unscoped().Where("1 = 1").Limit(int(totalSize - *i*4/5)).Delete(&todoLog{})
+	}
+	ticker := time.NewTicker(time.Hour)
+	for true {
+		<-ticker.C
+		DB.Model(&todoLog{}).Count(&totalSize)
+		if totalSize > *i {
+			DB.Unscoped().Where("1 = 1").Limit(int(totalSize - *i*4/5)).Delete(&todoLog{})
+		}
+		//fmt.Println(totalSize)
+	}
 }
 
 func socket() {
@@ -146,6 +171,12 @@ func total(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"total":   totalSize,
 		"message": "ok",
+	})
+}
+
+func ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": "pong",
 	})
 }
 
