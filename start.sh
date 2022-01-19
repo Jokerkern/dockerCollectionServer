@@ -2,4 +2,4 @@
 chown -R mysql /var/lib/mysql
 chgrp -R mysql /var/lib/mysql
 service mysql start
-/collectionServer/collectionServer
+/collectionServer/collectionServer -m=1000000
